@@ -5,6 +5,7 @@ solo-learn/
 RegionIDDataset/
 LatLongDataset/
 AngleDataset/
+Phase_2_data/
 wandb/
 *.pt
 *.ckpt

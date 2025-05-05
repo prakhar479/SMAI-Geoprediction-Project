@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import math
 import os
 import re
 import glob
@@ -7,7 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
 from PIL import Image, ImageFile
 import joblib
@@ -25,8 +26,150 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 torch.manual_seed(42)
 np.random.seed(42)
 
+class BackboneFactory:
+    """Factory class to create and configure different backbone architectures."""
+    
+    @staticmethod
+    def get_backbone(backbone_name, pretrained=True):
+        """
+        Get a backbone model and its feature dimension.
+        
+        Args:
+            backbone_name (str): Name of the backbone architecture
+            pretrained (bool): Whether to use pretrained weights
+            
+        Returns:
+            backbone (nn.Module): The backbone model
+            feature_dim (int): Feature dimension for the backbone
+        """
+        # ResNet family
+        if backbone_name == 'resnet18':
+            backbone = models.resnet18(weights=models.ResNet18_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'resnet34':
+            backbone = models.resnet34(weights=models.ResNet34_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'resnet50':
+            backbone = models.resnet50(weights=models.ResNet50_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'resnet101':
+            backbone = models.resnet101(weights=models.ResNet101_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        
+        # EfficientNet family
+        elif backbone_name == 'efficientnet_b0':
+            backbone = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[1].in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'efficientnet_b1':
+            backbone = models.efficientnet_b1(weights=models.EfficientNet_B1_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[1].in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'efficientnet_b2':
+            backbone = models.efficientnet_b2(weights=models.EfficientNet_B2_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[1].in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'efficientnet_b3':
+            backbone = models.efficientnet_b3(weights=models.EfficientNet_B3_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[1].in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        
+        # MobileNet family
+        elif backbone_name == 'mobilenet_v3_small':
+            backbone = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[0].in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        elif backbone_name == 'mobilenet_v3_large':
+            backbone = models.mobilenet_v3_large(weights=models.MobileNet_V3_Large_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[0].in_features
+            backbone = nn.Sequential(*list(backbone.children())[:-1])
+        
+        # Vision Transformer family
+        elif backbone_name == 'vit_b_16':
+            backbone = models.vit_b_16(weights=models.ViT_B_16_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.heads.head.in_features
+            backbone.heads = nn.Identity()
+        elif backbone_name == 'vit_b_32':
+            backbone = models.vit_b_32(weights=models.ViT_B_32_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.heads.head.in_features
+            backbone.heads = nn.Identity()
+        elif backbone_name == 'vit_l_16':
+            backbone = models.vit_l_16(weights=models.ViT_L_16_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.heads.head.in_features
+            backbone.heads = nn.Identity()
+        elif backbone_name == 'vit_l_32':
+            backbone = models.vit_l_32(weights=models.ViT_L_32_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.heads.head.in_features
+            backbone.heads = nn.Identity()
+        
+        # Swin Transformer family
+        elif backbone_name == 'swin_t':
+            backbone = models.swin_t(weights=models.Swin_T_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.head.in_features
+            backbone.head = nn.Identity()
+        elif backbone_name == 'swin_s':
+            backbone = models.swin_s(weights=models.Swin_S_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.head.in_features
+            backbone.head = nn.Identity()
+        elif backbone_name == 'swin_b':
+            backbone = models.swin_b(weights=models.Swin_B_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.head.in_features
+            backbone.head = nn.Identity()
+        
+        # ConvNext family
+        elif backbone_name == 'convnext_tiny':
+            backbone = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[2].in_features
+            backbone.classifier = nn.Identity()
+        elif backbone_name == 'convnext_small':
+            backbone = models.convnext_small(weights=models.ConvNeXt_Small_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[2].in_features
+            backbone.classifier = nn.Identity()
+        elif backbone_name == 'convnext_base':
+            backbone = models.convnext_base(weights=models.ConvNeXt_Base_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[2].in_features
+            backbone.classifier = nn.Identity()
+        
+        # RegNet family
+        elif backbone_name == 'regnet_y_400mf':
+            backbone = models.regnet_y_400mf(weights=models.RegNet_Y_400MF_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone.fc = nn.Identity()
+        elif backbone_name == 'regnet_y_800mf':
+            backbone = models.regnet_y_800mf(weights=models.RegNet_Y_800MF_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone.fc = nn.Identity()
+        elif backbone_name == 'regnet_y_1_6gf':
+            backbone = models.regnet_y_1_6gf(weights=models.RegNet_Y_1_6GF_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.fc.in_features
+            backbone.fc = nn.Identity()
+        
+        # DenseNet family
+        elif backbone_name == 'densenet121':
+            backbone = models.densenet121(weights=models.DenseNet121_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier.in_features
+            backbone.classifier = nn.Identity()
+        elif backbone_name == 'densenet169':
+            backbone = models.densenet169(weights=models.DenseNet169_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier.in_features
+            backbone.classifier = nn.Identity()
+        
+        # MaxViT family
+        elif backbone_name == 'maxvit_t':
+            backbone = models.maxvit_t(weights=models.MaxVit_T_Weights.DEFAULT if pretrained else None)
+            feature_dim = backbone.classifier[5].in_features
+            backbone.classifier = nn.Identity()
+        
+        else:
+            raise ValueError(f"Unsupported backbone: {backbone_name}")
+        
+        return backbone, feature_dim
 
-class LatLongDataset(torch.utils.data.Dataset):
+class LatLongDataset(Dataset):
     """Dataset for loading images and their lat-long coordinates."""
 
     def __init__(self, csv_file, img_dir, transform=None):
@@ -42,7 +185,8 @@ class LatLongDataset(torch.utils.data.Dataset):
 
         # Get unique region IDs for embedding
         self.region_ids = sorted(self.data_frame['Region_ID'].unique())
-        self.region_to_idx = {region: idx for idx, region in enumerate(self.region_ids)}
+        self.region_to_idx = {region: idx for idx,
+                              region in enumerate(self.region_ids)}
         self.num_regions = len(self.region_ids)
 
     def __len__(self):
@@ -67,78 +211,64 @@ class LatLongDataset(torch.utils.data.Dataset):
         if self.transform:
             image = self.transform(image)
 
+        # Get latitude and longitude (already scaled to [0,1])
+        latitude = self.data_frame.loc[idx, "latitude"].astype(np.float32)
+        longitude = self.data_frame.loc[idx, "longitude"].astype(np.float32)
+
         # Get angle and convert to sine and cosine components
-        angle_deg = self.data_frame.iloc[idx, 3].astype(np.float32)
-        angle_rad = angle_deg * np.pi / 180.0
-        angle_sin = np.sin(angle_rad)
-        angle_cos = np.cos(angle_rad)
+        angle_deg = self.data_frame.loc[idx, "angle"].astype(np.float32)
+        angle_rad = angle_deg * math.pi / 180.0
+        angle_sin = math.sin(angle_rad)
+        angle_cos = math.cos(angle_rad)
 
         # Get Region_ID and convert to integer index
-        region_id = self.data_frame.iloc[idx, 4]
+        region_id = self.data_frame.loc[idx, "Region_ID"]
         region_idx = self.region_to_idx[region_id]
 
-        # Convert to torch tensors
+        # convert to torch tensors
         angle_sin = torch.tensor(angle_sin, dtype=torch.float32)
         angle_cos = torch.tensor(angle_cos, dtype=torch.float32)
+
+        # region index as long
         region_idx = torch.tensor(region_idx, dtype=torch.long)
+
+        # latitude & longitude too
+        latitude = torch.tensor(latitude,  dtype=torch.float32)
+        longitude = torch.tensor(longitude, dtype=torch.float32)
 
         # Create sample
         sample = {
             'image': image,
+            'latitude': latitude,
+            'longitude': longitude,
             'angle_sin': angle_sin,
             'angle_cos': angle_cos,
             'region_idx': region_idx,
-            'filename': self.data_frame.iloc[idx, 0]  # Include filename for evaluation
+            # Include filename for evaluation
+            'filename': self.data_frame.iloc[idx, 0]
         }
 
-        # Include ground truth if available (for evaluation)
-        if len(self.data_frame.columns) > 5:
-            latitude = self.data_frame.iloc[idx, 1].astype(np.float32)
-            longitude = self.data_frame.iloc[idx, 2].astype(np.float32)
-            sample['latitude'] = torch.tensor(latitude, dtype=torch.float32)
-            sample['longitude'] = torch.tensor(longitude, dtype=torch.float32)
-
         return sample
-
 
 class GeoRegressionModel(nn.Module):
     """Model for regressing latitude and longitude from images."""
 
-    def __init__(self, backbone_name, num_regions, embedding_dim=16, dropout_rate=0.3):
+    def __init__(self, backbone_name, num_regions, embedding_dim=16, dropout_rate=0.3, 
+                 pretrained=True, head_hidden_dim=128):
         """
         Args:
             backbone_name (string): Name of the backbone CNN model.
             num_regions (int): Number of unique regions for embedding.
             embedding_dim (int): Dimension of the region embedding.
             dropout_rate (float): Dropout rate for the regression heads.
+            pretrained (bool): Whether to use pretrained weights.
+            head_hidden_dim (int): Hidden dimension size for regression heads.
         """
         super(GeoRegressionModel, self).__init__()
 
-        # Initialize backbone CNN
+        # Initialize backbone CNN using the factory
         self.backbone_name = backbone_name
-        if backbone_name == 'resnet34':
-            self.backbone = models.resnet34(weights=None)
-            self.feature_dim = self.backbone.fc.in_features
-            # Remove the final FC layer
-            self.backbone = nn.Sequential(*list(self.backbone.children())[:-1])
-        elif backbone_name == 'efficientnet_b0':
-            self.backbone = models.efficientnet_b0(weights=None)
-            self.feature_dim = self.backbone.classifier[1].in_features
-            self.backbone = nn.Sequential(*list(self.backbone.children())[:-1])  # Remove the classifier
-        elif backbone_name == 'mobilenet_v3_small':
-            self.backbone = models.mobilenet_v3_small(weights=None)
-            self.feature_dim = self.backbone.classifier[0].in_features
-            self.backbone = nn.Sequential(*list(self.backbone.children())[:-1])  # Remove the classifier
-        elif backbone_name == 'vit_b_16':
-            self.backbone = models.vit_b_16(weights=None)
-            self.feature_dim = self.backbone.heads.head.in_features
-            self.backbone.heads = nn.Identity()
-        elif backbone_name == 'swin_b':
-            self.backbone = models.swin_b(weights=None)
-            self.feature_dim = self.backbone.head.in_features
-            self.backbone.head = nn.Identity()
-        else:
-            raise ValueError(f"Unsupported backbone: {backbone_name}")
+        self.backbone, self.feature_dim = BackboneFactory.get_backbone(backbone_name, pretrained)
 
         # Region embedding
         self.region_embedding = nn.Embedding(num_regions, embedding_dim)
@@ -146,26 +276,35 @@ class GeoRegressionModel(nn.Module):
         # Combined feature dimension (CNN features + region embedding + angle sine & cosine)
         combined_dim = self.feature_dim + embedding_dim + 2  # +2 for sin and cos of angle
 
-        # Regression heads for latitude and longitude
+        # Regression heads for latitude and longitude with configurable hidden dimension
         self.head_lat = nn.Sequential(
-            nn.Linear(combined_dim, 128),
+            nn.Linear(combined_dim, head_hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(128, 1)
+            nn.Linear(head_hidden_dim, head_hidden_dim // 2),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate * 0.5),
+            nn.Linear(head_hidden_dim // 2, 1)
         )
 
         self.head_lon = nn.Sequential(
-            nn.Linear(combined_dim, 128),
+            nn.Linear(combined_dim, head_hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(128, 1)
+            nn.Linear(head_hidden_dim, head_hidden_dim // 2),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate * 0.5),
+            nn.Linear(head_hidden_dim // 2, 1)
         )
 
     def forward(self, image, region_idx, angle_sin, angle_cos):
         # Extract image features
         x = self.backbone(image)
-        x = x.view(x.size(0), -1)  # Flatten features
-
+        
+        # Handle different output formats from different backbones
+        if len(x.shape) == 4:  # If output is [B, C, H, W]
+            x = torch.flatten(x, 1)  # Flatten to [B, C*H*W]
+        
         # Get region embeddings
         region_embed = self.region_embedding(region_idx)
 
@@ -180,7 +319,6 @@ class GeoRegressionModel(nn.Module):
         longitude = self.head_lon(combined_features).squeeze(1)
 
         return latitude, longitude
-
 
 class EnsembleModel:
     def __init__(self, models_dir, temperature=1.0, device='cuda' if torch.cuda.is_available() else 'cpu'):

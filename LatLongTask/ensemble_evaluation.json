@@ -1,0 +1,13 @@
+{
+    "scaled_lat_mse": 47955152901.88295,
+    "scaled_lon_mse": 20360112773.432682,
+    "scaled_combined_mse": 34157632837.657814,
+    "unscaled_lat_mse": 7.440587671001751e+17,
+    "unscaled_lon_mse": 6.257870990075653e+17,
+    "unscaled_combined_mse": 6.849229330538702e+17,
+    "ensemble_weights": {
+        "regnet_y_400mf_emb32_dr0.1": 0.5016574939284799,
+        "densenet121_emb32_dr0.1": 0.49834250607152014
+    },
+    "temperature": 0.1
+}

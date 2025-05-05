@@ -345,9 +345,9 @@ def ensemble_predict(models_info, test_dir, output_csv, num_classes):
     # Create DataFrame and save to CSV
     prediction_df = pd.DataFrame(predictions)
     
-    # Save only id and Region_ID columns for the final submission
-    submission_df = prediction_df[['id', 'Region_ID']]
-    submission_df.to_csv(output_csv, index=False)
+    # # Save only id and Region_ID columns for the final submission
+    # submission_df = prediction_df[['id', 'Region_ID']]
+    # submission_df.to_csv(output_csv, index=False)
     
     # Save a more detailed version with filenames for debugging
     detail_csv = output_csv.replace('.csv', '_with_filenames.csv')
