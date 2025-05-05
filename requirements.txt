@@ -1,0 +1,32 @@
+# Core numerical and data manipulation libraries
+numpy
+pandas
+
+# Plotting and data visualization libraries
+matplotlib
+seaborn
+
+# Image processing library (Pillow provides the PIL module)
+Pillow
+
+# Joblib is used for saving/loading scaler objects
+joblib
+
+# Machine learning and data preprocessing libraries
+scikit-learn
+
+# PyTorch and related utilities
+torch
+torchvision
+einops
+wandb
+pytorch-lightning
+lightning-bolts
+torchmetrics
+scipy
+timm
+umap-learn
+
+# Progress bar and rich console output
+tqdm
+rich

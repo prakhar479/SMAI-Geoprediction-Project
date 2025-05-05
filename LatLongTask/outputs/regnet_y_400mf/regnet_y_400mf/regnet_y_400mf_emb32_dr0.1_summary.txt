@@ -1,0 +1,10 @@
+Model: regnet_y_400mf
+Embedding Dimension: 32
+Dropout Rate: 0.1
+Learning Rate: 0.001
+Weight Decay: 0.0001
+Batch Size: 32
+Best Validation MSE: 0.000954
+Final Latitude MSE: 0.001225
+Final Longitude MSE: 0.000875
+Final Combined MSE: 0.001050

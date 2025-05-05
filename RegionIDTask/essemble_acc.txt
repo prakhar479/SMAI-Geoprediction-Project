@@ -1,0 +1,15 @@
+efficientnet_b0: 70.73%
+efficientnet_b1: 69.92%
+efficientnet_b3: 
+
+mobilenet_v3_large: 81.84%
+
+resnet18: 89.16%
+resnet50: 93.5%
+resnet101: 96.21%
+
+convnext_base: 92.68%
+convnext_small: 92.14%
+
+vit_b-16: 90.79%
+swin_b: 94.04%

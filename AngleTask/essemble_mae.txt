@@ -1,0 +1,12 @@
+Efficientnet_B0: 25.04
+EfficientNet-B3: 25.37
+
+Resnet-18: 25.38
+Resnet-50: 23.17
+
+Mobilenet_v2: 28.72
+Mobilenet_v3_Large: 25.75
+
+Convnext-Small: 22.19
+Convnext-Base:  24.18
+

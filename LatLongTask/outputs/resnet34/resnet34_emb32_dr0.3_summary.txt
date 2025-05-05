@@ -1,0 +1,10 @@
+Model: resnet34
+Embedding Dimension: 32
+Dropout Rate: 0.3
+Learning Rate: 0.001
+Weight Decay: 0.0001
+Batch Size: 32
+Best Validation MSE: 0.001828
+Final Latitude MSE: 0.001993
+Final Longitude MSE: 0.001691
+Final Combined MSE: 0.001842

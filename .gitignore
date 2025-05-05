@@ -1,0 +1,11 @@
+.venv/
+model_checkpoints/
+*.pkl
+solo-learn/
+RegionIDDataset/
+LatLongDataset/
+AngleDataset/
+wandb/
+*.pt
+*.ckpt
+*.pth

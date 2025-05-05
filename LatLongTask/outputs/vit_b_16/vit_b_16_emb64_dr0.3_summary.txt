@@ -1,0 +1,10 @@
+Model: vit_b_16
+Embedding Dimension: 64
+Dropout Rate: 0.3
+Learning Rate: 0.001
+Weight Decay: 0.0001
+Batch Size: 32
+Best Validation MSE: 0.004119
+Final Latitude MSE: 0.004543
+Final Longitude MSE: 0.003709
+Final Combined MSE: 0.004126
