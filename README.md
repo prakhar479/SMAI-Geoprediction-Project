@@ -8,6 +8,8 @@ This repository provides an end-to-end solution for predicting geographic inform
 
 We employ a shared backbone encoder with task‐specific heads for multi-task learning, fuse auxiliary metadata (region ID, angle encoding) into the regression heads, leverage transfer learning, and apply strong data augmentations to combat overfitting on a small dataset (\~6,500 images).
 
+Note: We also implement a KNN approach for refining our Lat-Long regression task result for better predictions
+
 ---
 
 ## Model Architecture
