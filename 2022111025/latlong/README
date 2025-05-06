@@ -1,0 +1,33 @@
+
+## Model Overview
+
+A single end-to-end model uses a shared lightweight image encoder (e.g., EfficientNet-B0, ResNet-34, or small ViT) and splits into two simple MLP heads to directly regress latitude and longitude from pooled features.
+
+## Auxiliary Context Incorporation
+
+RegionID is embedded via a learned lookup (or one-hot + linear) and camera angle is encoded as sine and cosine; both are concatenated with image features before the regression heads.
+
+## Architecture Details
+
+After removing the backbone’s final classifier, global average pooling yields a feature vector that is fused with the embeddings and passed through two separate \[Dense→ReLU→Dropout→Linear] branches for lat and lon.
+
+## Preprocessing and Augmentation
+
+Images are resized to 224×224, normalized with ImageNet stats, and targets scaled to \[0,1]; augmentations include random cropping, color jitter, mild blur/noise, small affine/perspective transforms, and random erasing to improve robustness.
+
+## Training Strategy and Regularization
+
+Train with Adam(W) (lr 1e-3 – 1e-4, weight decay 1e-4), use LR scheduling (ReduceLROnPlateau or cosine), dropout in heads, and early stopping (patience 5–10) over 50–100 epochs with batch sizes of 16–32.
+
+## Loss and Metrics
+
+Optimize average MSE over latitude and longitude (optionally Huber loss), evaluate via per-axis MSE/RMSE (or geodesic error), and validate using stratified splits or group-KFold with logging of train/val curves.
+
+
+## Novel Idea:
+We use KNN technique to get refined prediction for latitude and longitude based on predicted values by model, this significantly increases precision of predictions 
+
+We finally use an essemble technique to boost accuracy and better handle edge cases (less confidence rate cases)
+
+![github](https://github.com/prakhar479/SMAI-Geoprediction-Project)
+![models](https://1drv.ms/f/c/f88f6002b41bfe05/Ej2OPIgxq-VFjWhWXJxzpaoBmMvubU_mfhs1QdqDQgCeng?e=CKR5lN)

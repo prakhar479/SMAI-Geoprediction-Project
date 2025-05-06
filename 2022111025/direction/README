@@ -1,0 +1,30 @@
+
+## Model Overview
+
+We employ a pretrained convolutional neural network (CNN) backbone (e.g., ResNet-50 or EfficientNet-B0/B3) that is fine-tuned on our image orientation dataset. The original classification head is removed and replaced with a compact regression head that outputs two values: cosine and sine of the predicted angle, enabling robust handling of wrap-around effects.
+
+## Auxiliary Context Incorporation
+
+To leverage geographic priors, each image’s region ID is fed into a learned embedding layer (8–16 dimensions). The resulting embedding vector is concatenated with the globally pooled CNN features, forming a joint representation that fuses visual and contextual information before regression.
+
+## Architecture Details
+
+After extracting features with the CNN backbone (top layers removed), we apply global average pooling and concatenate the region embedding. This combined vector is passed through a two-layer fully connected network: Dense(128, ReLU) → Dense(64, ReLU) → Dense(2, linear), predicting \[cos θ, sin θ]. Optionally, the output vector is L2-normalized to enforce unit length.
+
+## Preprocessing and Augmentation
+
+Images are resized/cropped to 224×224 and undergo aggressive augmentations: random rotations (with labels shifted by the same angle mod 360), horizontal flips (θ → 360 − θ), small translations, perspective warps, color jitter (brightness, contrast, saturation), and occlusion techniques (Cutout or random erasing) to improve robustness on a small dataset (\~6500 images).
+
+## Training Strategy and Regularization
+
+Training begins by freezing most backbone layers and optimizing only the new head (learning rate 1e⁻³). Deeper layers are gradually unfrozen with a reduced learning rate (1e⁻⁴) for fine-tuning. Regularization techniques include weight decay (1e⁻⁵), dropout (0.2–0.5), and batch-normalization layers either frozen or lightly tuned. A cosine-annealing learning-rate schedule (with optional warm-up) or ReduceLROnPlateau is used for convergence.
+
+## Loss and Metrics
+
+We use a chord-length loss equivalent to MSE on the unit-circle representation: (ĉ − cos θ)² + (ŝ − sin θ)², which equals 2 − 2 cos(Δθ). At inference, angles are recovered via `atan2(sin, cos)` (degrees mod 360). Model performance is measured by Mean Absolute Angular Error (MAE) considering wrap-around and the percentage of predictions within 15° of ground truth.
+
+We finally use an essemble technique to boost accuracy and better handle edge cases (less confidence rate cases)
+
+
+![github](https://github.com/prakhar479/SMAI-Geoprediction-Project)
+![models](https://1drv.ms/f/c/f88f6002b41bfe05/Ej2OPIgxq-VFjWhWXJxzpaoBmMvubU_mfhs1QdqDQgCeng?e=CKR5lN)

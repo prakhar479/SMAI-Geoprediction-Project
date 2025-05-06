@@ -1,0 +1,30 @@
+## Model Overview
+
+The solution employs a compact convolutional neural network built upon a pretrained ImageNet backbone—such as EfficientNet-B0 or MobileNetV3-Large—with roughly 5–6 million parameters. By replacing the original classification head with a lightweight dropout-ReLU-linear sequence tailored for 15 output classes, the model delivers high accuracy while remaining suitable for edge or resource-constrained environments. This end-to-end pipeline directly maps 224 × 224 images to one of 15 geographic region IDs, leveraging transfer learning to accelerate convergence and reduce the need for extensive training data.
+
+## Auxiliary Context Incorporation
+
+To infuse the model with rich, generalizable visual knowledge, the pretrained backbone’s convolutional filters—originally trained on vast ImageNet data—are first frozen, allowing only the new head to adapt to region labels. Once the head has learned a baseline mapping, deeper blocks of the backbone are gradually unfrozen and fine-tuned at a lower learning rate, enabling high-level landmark features to specialize without erasing the generic texture and shape priors. This staged transfer-learning strategy harnesses both auxiliary context from large-scale pretraining and the specific distribution of the 6,500-image dataset.
+
+## Architecture Details
+
+The core architecture consists of the chosen backbone retained up through its final feature‐extraction layer, followed by a newly defined classifier head comprising a dropout layer (p=0.2), a 128-unit fully connected layer with ReLU activation, a second dropout layer, and a final fully connected layer projecting to the 15 region classes. By limiting the head’s capacity and using dropout, the network strikes a balance between expressivity and regularization. All BatchNorm layers in the backbone remain in evaluation or low-momentum training mode to maintain stable feature statistics when batch sizes are small.
+
+## Preprocessing and Augmentation
+
+Input images undergo aggressive yet realistic augmentations—including random resized cropping (scale 0.8–1.0), horizontal flips, ±15° rotations, and moderate color jitter for brightness and contrast—to simulate variations in viewpoint, tilt, zoom, and lighting conditions. After augmentation, pixels are converted to tensors and normalized using ImageNet’s mean \[0.485, 0.456, 0.406] and standard deviation \[0.229, 0.224, 0.225]. These transformations both artificially expand the 6,500-image dataset and ensure the model receives inputs consistent with the pretrained backbone’s expectations, thereby improving robustness to environmental changes without distorting class-defining features.
+
+## Training Strategy and Regularization
+
+Training proceeds in two stages: a feature-extraction phase where only the new head is optimized (learning rate \~1e-3) for 5–10 epochs, followed by a fine-tuning phase where selected backbone blocks are unfrozen and the entire network is trained at a reduced learning rate (\~1e-4). The AdamW optimizer with weight decay (≈1e-4) is combined with a cosine-annealing or OneCycleLR scheduler to smoothly decrease the learning rate over epochs. Regularization is addressed through dropout in the head, weight decay, and optional advanced techniques such as MixUp or label smoothing. Early stopping based on validation loss and checkpointing the best weights prevent overfitting.
+
+## Loss and Metrics
+
+Model training minimizes the standard cross-entropy loss applied to the raw logits and integer region labels. Performance is evaluated using stratified k-fold cross-validation (commonly five folds) to ensure balanced class representation, with overall accuracy as the primary metric and per-class precision, recall, and F1-score as secondary metrics. Monitoring training versus validation curves and inspecting confusion matrices identifies underfitting, overfitting, or systematic class confusions, guiding adjustments such as capacity scaling, augmentation strength, or gathering additional data.
+
+
+We finally use an essemble technique to boost accuracy and better handle edge cases (less confidence rate cases)
+
+
+![github](https://github.com/prakhar479/SMAI-Geoprediction-Project)
+![models](https://1drv.ms/f/c/f88f6002b41bfe05/Ej2OPIgxq-VFjWhWXJxzpaoBmMvubU_mfhs1QdqDQgCeng?e=CKR5lN)
