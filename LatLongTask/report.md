@@ -148,4 +148,4 @@ By carefully splitting data and using cross-validation, we ensure the reported M
 
 By following this plan—defining a dual-head CNN, carefully encoding metadata, employing strong augmentation, and rigorously validating—we can build a model that effectively regresses scaled latitude and longitude with low MSE. The shared-backbone multi-task design and use of pretrained networks are key to good performance on limited data, while embedding RegionID and encoding angle preserve crucial spatial context. The combination of these elements should yield a robust geolocation regression system.
 
-**Sources:** Established best practices in image-based regression and geolocation (coordinate regression and multi-task learning), augmentation surveys, and deep learning guidelines for small-data regimes informed these recommendations.
+Using Beta Regression Link to predict scaled latitude and longitude ( 0 to 1 to solve saturation)
